@@ -2,6 +2,7 @@
 
 package me.saket.telephoto.zoomable.internal
 
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -12,7 +13,10 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.layout.ScaleFactor
 import androidx.compose.ui.layout.times
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.round
 import me.saket.telephoto.zoomable.BaseZoomFactor
 import me.saket.telephoto.zoomable.ContentZoomFactor
 import me.saket.telephoto.zoomable.UserZoomFactor
@@ -164,5 +168,14 @@ internal inline fun Rect.intersect(topLeft: Offset, size: Size): Rect {
     )
   } else {
     this
+  }
+}
+
+internal class OffsetAlignment(
+  @Suppress("unused") private val topLeft: ScaleFactor,
+  private val delegate: Alignment,
+) : Alignment {
+  override fun align(size: IntSize, space: IntSize, layoutDirection: LayoutDirection): IntOffset {
+    return delegate.align(size, space, layoutDirection)
   }
 }

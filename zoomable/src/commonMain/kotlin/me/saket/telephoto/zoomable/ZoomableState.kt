@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import me.saket.telephoto.ExperimentalTelephotoApi
 import me.saket.telephoto.zoomable.spatial.CoordinateSpace
@@ -44,6 +45,7 @@ fun rememberZoomableState(
     it.zoomSpec = zoomSpec
     it.hardwareShortcutsSpec = hardwareShortcutsSpec
     it.layoutDirection = LocalLayoutDirection.current
+    it.density = LocalDensity.current
     //it.RetainPanAcrossContentSizeChangesEffect()
   }
 }
@@ -114,7 +116,6 @@ sealed interface ZoomableState {
   /** Whether any zoom, pan (or both) animation is in progress. */
   val isAnimationRunning: Boolean
 
-  // todo: add some basic tests
   /**
    * `Modifier.zoomable()`'s coordinate system for representing spatial offsets in
    * [CoordinateSpace.Viewport][CoordinateSpace.Companion.Viewport] and
@@ -137,6 +138,7 @@ sealed interface ZoomableState {
    * }
    * ```
    */
+  // todo: add some basic tests
   @ExperimentalTelephotoApi
   val coordinateSystem: ZoomableCoordinateSystem
 

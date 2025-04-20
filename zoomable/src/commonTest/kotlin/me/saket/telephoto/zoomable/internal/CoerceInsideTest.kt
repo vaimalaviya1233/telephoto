@@ -114,6 +114,8 @@ private fun Rect.topLeftCoercedInside(destination: Size, alignment: Alignment): 
   return calculateTopLeftToOverlapWith(
     destination = destination,
     alignment = alignment,
-    layoutDirection = LayoutDirection.Ltr
+    layoutDirection = LayoutDirection.Ltr,
+    viewportSize = viewportSize,
+    paddedViewportBounds = inputs.paddedViewportBounds
   )
 }

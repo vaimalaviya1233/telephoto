@@ -67,7 +67,8 @@ class SampleActivity : AppCompatActivity() {
     setContent {
       TelephotoTheme {
         Navigation(
-          initialScreenKey = GalleryScreenKey(album)
+          //initialScreenKey = CropImageScreenKey(album.items[1] as MediaItem.Image)
+          initialScreenKey = MediaViewerScreenKey(album, 1)
         )
       }
     }

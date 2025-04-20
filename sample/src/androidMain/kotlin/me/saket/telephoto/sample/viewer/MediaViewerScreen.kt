@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.SnapSpec
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -33,6 +34,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import coil.request.ImageRequest
 import com.slack.circuit.runtime.Navigator
 import kotlinx.coroutines.delay
@@ -144,6 +146,7 @@ private fun MediaPage(
             .crossfade(300)
             .build(),
           contentDescription = model.caption,
+          contentPadding = PaddingValues(start = 60.dp, end = 30.dp)
         )
 
         // Focus the image so that it can receive keyboard and mouse shortcut events.

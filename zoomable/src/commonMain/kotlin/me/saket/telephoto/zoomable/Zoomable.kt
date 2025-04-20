@@ -82,6 +82,7 @@ fun Modifier.zoomable(
 }
 
 // todo: how do i make this public without causing an overload ambiguity?
+// todo: add SpatialOffset variants to ZoomableImage, ZoomableAsyncImage and ZoomableGlideImage.
 /** See [Modifier.zoomable]. */
 @ExperimentalTelephotoApi
 private fun Modifier.zoomable2(

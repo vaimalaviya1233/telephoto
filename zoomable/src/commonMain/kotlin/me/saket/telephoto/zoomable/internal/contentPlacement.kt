@@ -16,41 +16,59 @@ import kotlin.LazyThreadSafetyMode.NONE
  * This is used by [Modifier.zoomable] to prevent panning of its content outside of its layout bounds.
  */
 internal fun Rect.calculateTopLeftToOverlapWith(
-  destination: Size,
+  viewportSize: Size,
+  paddedViewportBounds: Rect,
   alignment: Alignment,
   layoutDirection: LayoutDirection,
 ): Offset {
-  check(destination.isSpecified) {
+  check(viewportSize.isSpecified) {
     "Whoops Modifier.zoomable() is not supposed to handle gestures yet. " +
       "Please file an issue on https://github.com/saket/telephoto/issues?"
   }
 
-  val alignedOffset by lazy(NONE) {
-    // Rounding of floats to ints will cause some loss in precision because the final
-    // offset is calculated by combining offset & zoom, but hopefully this is okay.
-    // The alternative would be to fork Alignment's code to work with floats.
-    alignment.align(
-      size = size.roundToIntSize(),
-      space = destination.roundToIntSize(),
-      layoutDirection = layoutDirection,
+  // For content larger than viewport: constrain to ensure overlap
+  if (width >= viewportSize.width || height >= viewportSize.height) {
+    return topLeft.copy(
+      x = if (width >= viewportSize.width) {
+        topLeft.x.coerceIn(
+          minimumValue = (viewportSize.width - width).coerceAtMost(0f),
+          maximumValue = 0f
+        )
+      } else {
+        // When width is smaller but height is larger, calculate horizontal alignment position
+        val alignedOffset = alignment.align(
+          size = Size(width, 0f).roundToIntSize(),
+          space = Size(viewportSize.width, 0f).roundToIntSize(),
+          layoutDirection = layoutDirection,
+        )
+        alignedOffset.x.toFloat() + paddedViewportBounds.left
+      },
+      y = if (height >= viewportSize.height) {
+        topLeft.y.coerceIn(
+          minimumValue = (viewportSize.height - height).coerceAtMost(0f),
+          maximumValue = 0f
+        )
+      } else {
+        // When height is smaller but width is larger, calculate vertical alignment position
+        val alignedOffset = alignment.align(
+          size = Size(0f, height).roundToIntSize(),
+          space = Size(0f, viewportSize.height).roundToIntSize(),
+          layoutDirection = layoutDirection,
+        )
+        alignedOffset.y.toFloat() + paddedViewportBounds.top
+      }
     )
   }
-  return topLeft.copy(
-    x = if (width >= destination.width) {
-      topLeft.x.coerceIn(
-        minimumValue = (destination.width - width).coerceAtMost(0f),
-        maximumValue = 0f
-      )
-    } else {
-      alignedOffset.x.toFloat()
-    },
-    y = if (height >= destination.height) {
-      topLeft.y.coerceIn(
-        minimumValue = (destination.height - height).coerceAtMost(0f),
-        maximumValue = 0f
-      )
-    } else {
-      alignedOffset.y.toFloat()
-    }
+
+  // For content smaller than viewport in both dimensions: use alignment
+  val alignedOffset = alignment.align(
+    size = size.roundToIntSize(),
+    space = paddedViewportBounds.size.roundToIntSize(),
+    layoutDirection = layoutDirection,
+  )
+
+  return Offset(
+    x = alignedOffset.x.toFloat() + paddedViewportBounds.left,
+    y = alignedOffset.y.toFloat() + paddedViewportBounds.top
   )
 }

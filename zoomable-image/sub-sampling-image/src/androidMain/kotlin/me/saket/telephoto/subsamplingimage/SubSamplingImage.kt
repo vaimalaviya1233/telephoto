@@ -6,6 +6,8 @@ import android.annotation.SuppressLint
 import android.content.pm.ActivityInfo
 import android.os.Build.VERSION.SDK_INT
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Stable
@@ -46,7 +48,7 @@ import me.saket.telephoto.subsamplingimage.internal.toCeilInt
  * [SubSamplingImage] is automatically used by [ZoomableImage][me.saket.telephoto.zoomable.ZoomableImage].
  */
 @Composable
-fun SubSamplingImage(
+fun   SubSamplingImage(
   state: SubSamplingImageState,
   contentDescription: String?,
   modifier: Modifier = Modifier,
@@ -169,9 +171,9 @@ private fun Modifier.wrapContentSizeIfNeeded(imageSize: IntSize?): Modifier {
   }
 }
 
-@SuppressLint("ComposeParameterOrder")
-@Deprecated("Kept for binary compatibility", level = DeprecationLevel.HIDDEN)  // For binary compatibility.
 @Composable
+@SuppressLint("ComposeParameterOrder")
+@Deprecated("Kept for binary compatibility", level = DeprecationLevel.HIDDEN)
 fun SubSamplingImage(
   state: SubSamplingImageState,
   modifier: Modifier = Modifier,

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
@@ -77,11 +78,9 @@ internal fun CropImageScreen(key: CropImageScreenKey, navigator: Navigator) {
     val imageState = rememberZoomableImageState()
     val cropperState = rememberCropperState(imageState)
 
-    Box(
-      Modifier
-        .weight(1f)
-        .padding(horizontal = 16.dp)
-    ) {
+    Box(Modifier.weight(1f)) {
+
+      // todo: add another 16.dp to this.
       val imageInsets = WindowInsets.safeContent
         .only(WindowInsetsSides.Horizontal)
         .union(WindowInsets.safeContent.only(WindowInsetsSides.Top))
@@ -89,7 +88,6 @@ internal fun CropImageScreen(key: CropImageScreenKey, navigator: Navigator) {
       // todo: i need contentPadding
       ZoomableAsyncImage(
         modifier = Modifier
-          .windowInsetsPadding(imageInsets)
           .fillMaxSize()
           .disallowTouchEventsOutsideOf { cropperState.cropBounds },
         state = imageState,
@@ -98,6 +96,7 @@ internal fun CropImageScreen(key: CropImageScreenKey, navigator: Navigator) {
           .placeholderMemoryCacheKey(key.mediaItem.placeholderImageUrl)
           .build(),
         contentDescription = key.mediaItem.caption,
+        contentPadding = imageInsets.asPaddingValues(),
       )
 
       if (!cropperState.cropBounds.isEmpty) {

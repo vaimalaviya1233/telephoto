@@ -69,7 +69,7 @@ internal class RealSubSamplingImageState(
 
   internal var imageRegionDecoder: ImageRegionDecoder? by mutableStateOf(null)
   internal var viewportSize: IntSize? by mutableStateOf(null)
-  internal var showTileBounds = false  // Only used by tests.
+  internal var showTileBounds = true  // Only used by tests.
 
   /**
    * Images collected from [ImageCache].

@@ -11,6 +11,8 @@ import androidx.compose.animation.core.animateDecay
 import androidx.compose.animation.core.animateTo
 import androidx.compose.animation.splineBasedDecay
 import androidx.compose.foundation.MutatePriority
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,6 +37,7 @@ import androidx.compose.ui.layout.times
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.Velocity
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toOffset
 import androidx.compose.ui.util.lerp
 import kotlinx.coroutines.Dispatchers
@@ -122,6 +125,8 @@ internal class RealZoomableState internal constructor(
 
   internal var hardwareShortcutsSpec by mutableStateOf(HardwareShortcutsSpec())
   internal var layoutDirection: LayoutDirection by mutableStateOf(LayoutDirection.Ltr)
+  internal var contentPadding: PaddingValues by mutableStateOf(PaddingValues(0.dp))
+  internal var density: Density? by mutableStateOf(null)
 
   /**
    * Raw size of the zoomable content without any scaling applied.
@@ -152,9 +157,24 @@ internal class RealZoomableState internal constructor(
 
   private val gestureStateInputsCalculator: GestureStateInputsCalculator by derivedStateOf {
     GestureStateInputsCalculator { viewportSize ->
-      if (viewportSize.isUnspecifiedOrEmpty || unscaledContentLocation == ZoomableContentLocation.Unspecified) {
+      val density = this.density
+      if (
+        viewportSize.isUnspecifiedOrEmpty ||
+        unscaledContentLocation == ZoomableContentLocation.Unspecified ||
+        density == null
+      ) {
         return@GestureStateInputsCalculator null
       }
+
+      val paddedViewportBounds = with(density) {
+        Rect(
+          left = contentPadding.calculateStartPadding(layoutDirection).toPx(),
+          top = contentPadding.calculateTopPadding().toPx(),
+          right = viewportSize.width - contentPadding.calculateRightPadding(layoutDirection).toPx(),
+          bottom = viewportSize.height - contentPadding.calculateBottomPadding().toPx(),
+        )
+      }
+
       val unscaledContentBounds = unscaledContentLocation.location(
         layoutSize = viewportSize,
         direction = layoutDirection,
@@ -165,22 +185,30 @@ internal class RealZoomableState internal constructor(
 
       val baseZoomFactor = contentScale.computeScaleFactor(
         srcSize = unscaledContentBounds.size,
-        dstSize = viewportSize,
+        dstSize = paddedViewportBounds.size,
       )
       check(baseZoomFactor != ScaleFactor.Zero) {
         "Base zoom shouldn't be zero. content bounds = $unscaledContentBounds, viewport size = $viewportSize"
       }
+//      val paddedAlignment = OffsetAlignment(
+//        topLeft = ScaleFactor(
+//          scaleX = paddedViewportBounds.topLeft.x / (unscaledContentBounds.size * baseZoomFactor).width,
+//          scaleY = paddedViewportBounds.topLeft.y / (unscaledContentBounds.size * baseZoomFactor).height,
+//        ),
+//        delegate = contentAlignment,
+//      )
       val baseOffset = run {
-        val alignmentOffset = contentAlignment.align(
+        val alignmentOffset = paddedViewportBounds.topLeft + contentAlignment.align(
           size = (unscaledContentBounds.size * baseZoomFactor).roundToIntSize(),
-          space = viewportSize.roundToIntSize(),
+          space = paddedViewportBounds.size.roundToIntSize(),
           layoutDirection = layoutDirection,
-        )
+        ).toOffset()
         // Take the content's top-left into account because it may not start at 0,0.
-        unscaledContentBounds.topLeft + (-alignmentOffset.toOffset() / baseZoomFactor)
+        unscaledContentBounds.topLeft + (-alignmentOffset / baseZoomFactor)
       }
       GestureStateInputs(
         viewportSize = viewportSize,
+        paddedViewportBounds = paddedViewportBounds,
         baseZoom = BaseZoomFactor(baseZoomFactor),
         baseOffset = baseOffset,
         unscaledContentBounds = unscaledContentBounds,
@@ -385,10 +413,12 @@ internal class RealZoomableState internal constructor(
     return transformUserOffset { finalOffset ->
       finalOffset.withZoomAndTranslate(zoom = -proposedZoom.finalZoom(), translate = scaledTopLeft) {
         val expectedDrawRegion = Rect(it, unscaledContentBounds.size * proposedZoom).throwIfDrawRegionIsTooLarge()
-        expectedDrawRegion.calculateTopLeftToOverlapWith(
-          destination = inputs.viewportSize,
+        /*(inputs.paddedViewportBounds.topLeft * proposedZoom.userZoom.value) +*/ expectedDrawRegion.calculateTopLeftToOverlapWith(
+          viewportSize = viewportSize,
+          paddedViewportBounds = inputs.paddedViewportBounds,
           alignment = inputs.contentAlignment,
           layoutDirection = inputs.layoutDirection,
+//          baseAlignmentOffset = inputs.baseOffset * proposedZoom.finalZoom(),
         )
       }
     }
@@ -731,6 +761,7 @@ internal data class GestureState(
 
 internal data class GestureStateInputs(
   val viewportSize: Size,
+  val paddedViewportBounds: Rect,
   val baseZoom: BaseZoomFactor,
   val baseOffset: Offset,
   val unscaledContentBounds: Rect,
@@ -763,6 +794,7 @@ internal value class BaseZoomFactor(val value: ScaleFactor) {
 @Immutable
 internal value class UserZoomFactor(val value: Float)
 
+// todo: find a different name because this clashes with CoordinateSpace.ZoomableContent
 internal data class ContentZoomFactor(
   private val baseZoom: BaseZoomFactor,
   val userZoom: UserZoomFactor,
@@ -847,6 +879,7 @@ internal value class UserOffset private constructor(val value: Offset) {
     UserOffset(value.times(factor))
 }
 
+// todo: find a different name because this clashes with CoordinateSpace.ZoomableContent
 internal data class ContentOffset(
   /**
    * The minimum offset needed to position the content within its layout
